@@ -12,3 +12,15 @@ export type Question = {
     status: 'open' | 'in-progress' | 'completed' | 'unassigned';
     dueDate: string;
 };
+
+export type QuestionT = {
+    id: string;
+    questionText: string;
+    creationDate: string;
+    lastUpdatedDate: string;
+    delegatedEmail: string;
+    questionHistory: string[];
+    historyLog: string[];
+    assignments: string[];
+    singleAssignments: string[];
+};

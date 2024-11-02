@@ -1,5 +1,4 @@
 import { DefaultSession } from "next-auth";
-import { MBUser } from "./auth/session.types";
 
 declare module "next-auth" {
   /**
@@ -12,7 +11,6 @@ declare module "next-auth" {
       firstName: string;
       lastName: string;
     } & DefaultSession["user"];
-    mbUser: MBUser;
   }
 
   interface User extends DefaultUser {

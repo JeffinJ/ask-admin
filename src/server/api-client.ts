@@ -1,11 +1,9 @@
 import 'server-only';
-import { authOptions } from '@/app/api/auth/[...nextauth]/options';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 
 /**
- * Axios client for making requests to the Airtable APIs.
+ * Axios client for making requests to the ask-admin-backend APIs.
  *
  */
 class APIClient {
@@ -37,18 +35,6 @@ class APIClient {
         // Add a request interceptor to include the id_token in every request
         instance.interceptors.request.use(
             async (config) => {
-                const session = await getServerSession(authOptions);
-
-                if (session === null) {
-                    throw new Error('Unauthorized');
-                }
-
-                const jwtToken = session.id_token;
-                // Add authorization token if available
-                const idToken = jwtToken as string;
-                if (idToken) {
-                    config.headers.Authorization = `Bearer ${idToken}`;
-                }
                 return config;
             },
             (error) => Promise.reject(error) // Handle request error
