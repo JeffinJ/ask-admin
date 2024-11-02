@@ -40,22 +40,33 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Question, User } from "@/types/question"
-import { mockQuestions } from "@/lib/data"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { QuestionT } from "@/types/question"
 
-const getStatusBadge = (status: Question['status']) => {
-    const variants: Record<Question['status'], "default" | "secondary" | "destructive" | "outline"> = {
-        'open': "secondary",
+// Helper function to determine status based on assignments
+const getQuestionStatus = (question: QuestionT): "unassigned" | "assigned" | "in-progress" | "completed" => {
+    if (!question.delegatedEmail) return "unassigned";
+    if (question.assignments.length === 0) return "assigned";
+    if (question.singleAssignments.length > 0) return "completed";
+    return "in-progress";
+}
+
+const getStatusBadge = (status: ReturnType<typeof getQuestionStatus>) => {
+    const variants: Record<typeof status, "default" | "secondary" | "destructive" | "outline"> = {
+        'unassigned': "destructive",
+        'assigned': "secondary",
         'in-progress': "default",
-        'completed': "outline",
-        'unassigned': "destructive"
+        'completed': "outline"
     };
 
     return <Badge variant={variants[status]} className="capitalize">{status}</Badge>;
 };
 
-export const columns: ColumnDef<Question>[] = [
+type QuestionTableProps = {
+    questions: QuestionT[];
+}
+
+export const columns: ColumnDef<QuestionT>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -83,7 +94,7 @@ export const columns: ColumnDef<Question>[] = [
         ),
     },
     {
-        accessorKey: "assignedTo",
+        accessorKey: "delegatedEmail",
         header: ({ column }) => {
             return (
                 <Button
@@ -96,36 +107,39 @@ export const columns: ColumnDef<Question>[] = [
             )
         },
         cell: ({ row }) => {
-            const assignedTo = row.getValue("assignedTo") as User | null;
-            if (!assignedTo) return <div className="text-muted-foreground">Unassigned</div>;
+            const email = row.getValue("delegatedEmail") as string;
+            if (!email) return <div className="text-muted-foreground">Unassigned</div>;
 
             return (
                 <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                        <AvatarImage src={assignedTo.avatar} alt={assignedTo.name} />
-                        <AvatarFallback>{assignedTo.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        <AvatarFallback>{email[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <div className="font-medium">{assignedTo.name}</div>
-                        <div className="text-sm text-muted-foreground">{assignedTo.email}</div>
+                        <div className="text-sm text-muted-foreground">{email}</div>
                     </div>
                 </div>
             );
         },
     },
     {
-        accessorKey: "status",
+        id: "status",
         header: "Status",
-        cell: ({ row }) => getStatusBadge(row.getValue("status")),
+        cell: ({ row }) => {
+            const status = getQuestionStatus(row.original);
+            return getStatusBadge(status);
+        },
     },
     {
-        accessorKey: "dueDate",
+        accessorKey: "creationDate",
         header: "Due Date",
         cell: ({ row }) => {
-            const date = new Date(row.getValue("dueDate"));
+            const date = new Date(row.getValue("creationDate"));
+            // Add 7 days to creation date as a mock due date
+            const dueDate = new Date(date.setDate(date.getDate() + 7));
             return (
                 <div className="font-medium">
-                    {date.toLocaleDateString('en-US', {
+                    {dueDate.toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric'
@@ -156,9 +170,9 @@ export const columns: ColumnDef<Question>[] = [
                             Copy question ID
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>Edit question</DropdownMenuItem>
-                        <DropdownMenuItem>View details</DropdownMenuItem>
-                        <DropdownMenuItem>Reassign</DropdownMenuItem>
+                        <DropdownMenuItem>View history ({question.questionHistory.length})</DropdownMenuItem>
+                        <DropdownMenuItem>View assignments ({question.assignments.length})</DropdownMenuItem>
+                        <DropdownMenuItem>View single assignments ({question.singleAssignments.length})</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )
@@ -166,14 +180,14 @@ export const columns: ColumnDef<Question>[] = [
     },
 ]
 
-export function QuestionsTable() {
+export function QuestionsTable({ questions }: QuestionTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
 
     const table = useReactTable({
-        data: mockQuestions,
+        data: questions,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
