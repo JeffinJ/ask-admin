@@ -1,4 +1,5 @@
 import { DefaultSession } from "next-auth";
+import { AirTUser } from "./user";
 
 declare module "next-auth" {
   /**
@@ -7,10 +8,12 @@ declare module "next-auth" {
   interface Session {
     id: string;
     id_token: string;
+    airtableUser: AirTUser;
     user: {
       firstName: string;
       lastName: string;
     } & DefaultSession["user"];
+
   }
 
   interface User extends DefaultUser {

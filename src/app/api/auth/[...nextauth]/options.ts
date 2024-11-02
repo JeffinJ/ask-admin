@@ -1,3 +1,5 @@
+import { createUser } from "@/server/apis/user";
+import { AirTUser } from "@/types/user";
 import NextAuth, { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 
@@ -27,6 +29,19 @@ export const authOptions: NextAuthOptions = {
         console.log("jwt-user", user);
         console.log("jwt-account", account);
         console.log("jwt-profile", profile);
+
+        const userName = token.name;
+        const userEmail = token.email;
+
+        const createdUserr = await createUser({
+          userName: userName as string,
+          email: userEmail as string,
+        });
+
+        console.log("session-createdUserr", createdUserr);
+
+        token.airtableUser = createdUserr;
+
         return token;
       } catch (error) {
         console.error("jwt error", error);
@@ -37,6 +52,7 @@ export const authOptions: NextAuthOptions = {
       try {
         console.log("session-session", session);
         console.log("session-token", token);
+        session.airtableUser = token.airtableUser as AirTUser;
         return session;
       } catch (error: unknown) {
         console.error("session error", error);

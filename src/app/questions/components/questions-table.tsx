@@ -43,7 +43,6 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { QuestionT } from "@/types/question"
 
-// Helper function to determine status based on assignments
 const getQuestionStatus = (question: QuestionT): "unassigned" | "assigned" | "in-progress" | "completed" => {
     if (!question.delegatedEmail) return "unassigned";
     if (question.assignments.length === 0) return "assigned";
